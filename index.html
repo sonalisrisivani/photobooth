@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth</title>
+    <style>
+        /* Minimal styling */
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        video, canvas { display: block; margin: 10px 0; }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWhzMHSSNyBJILjy0ELy2WCdiwjc84SJ8",
+            authDomain: "photobooth-sss.firebaseapp.com",
+            projectId: "photobooth-sss",
+            storageBucket: "photobooth-sss.appspot.com",
+            messagingSenderId: "893599274396",
+            appId: "1:893599274396:web:a1454f34acbd380890a459",
+            measurementId: "G-3B9BXBCZPG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const video = document.getElementById("camera");
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+            const captureButton = document.getElementById("capture");
+            const sendButton = document.getElementById("send");
+            const phoneNumberInput = document.getElementById("phone-number");
+
+            // Access webcam
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(error => console.error("Error accessing webcam:", error));
+
+            // Capture image
+            captureButton.addEventListener("click", () => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            });
+
+            // Send image
+            sendButton.addEventListener("click", async () => {
+                const phoneNumber = phoneNumberInput.value;
+                if (!phoneNumber) {
+                    alert("Please enter a WhatsApp number.");
+                    return;
+                }
+
+                // Convert canvas image to data URL
+                const imageData = canvas.toDataURL("image/png");
+                const storageRef = ref(storage, `photos/photo_${Date.now()}.png`);
+
+                try {
+                    // Upload image to Firebase Storage
+                    await uploadString(storageRef, imageData, 'data_url');
+                    const downloadURL = await getDownloadURL(storageRef);
+
+                    // Save data to Firestore
+                    await addDoc(collection(db, "photos"), {
+                        phoneNumber: phoneNumber,
+                        imageURL: downloadURL,
+                        timestamp: serverTimestamp()
+                    });
+
+                    alert("Photo saved successfully!");
+                } catch (error) {
+                    console.error("Error saving photo:", error);
+                    alert("Error saving photo. Please try again.");
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Photobooth</h1>
+    <video id="camera" width="320" height="240" autoplay></video>
+    <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+    <input type="text" id="phone-number" placeholder="Enter WhatsApp number">
+    <button id="capture">Capture Photo</button>
+    <button id="send">Send Photo</button>
+</body>
+</html>
