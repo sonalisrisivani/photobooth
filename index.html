@@ -11,7 +11,7 @@
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
         import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js";
 
         // Firebase configuration
@@ -50,7 +50,7 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             });
 
-            // Send image
+            // Send image and save data to Firestore
             sendButton.addEventListener("click", async () => {
                 const phoneNumber = phoneNumberInput.value;
                 if (!phoneNumber) {
@@ -67,11 +67,10 @@
                     await uploadString(storageRef, imageData, 'data_url');
                     const downloadURL = await getDownloadURL(storageRef);
 
-                    // Save data to Firestore
+                    // Save phone number and image URL to Firestore
                     await addDoc(collection(db, "photos"), {
                         phoneNumber: phoneNumber,
-                        imageURL: downloadURL,
-                        timestamp: serverTimestamp()
+                        imageURL: downloadURL
                     });
 
                     alert("Photo saved successfully!");
