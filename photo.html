@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #504a4a;
+            color: white;
+            margin: 20px;
+        }
+        
+        
+        :root {
+            --neon-blue: #00ffff;
+            --neon-light-blue: #33ccff;
+            --neon-glow: 0 0 5px var(--neon-blue),
+                        0 0 10px var(--neon-blue),
+                        0 0 20px var(--neon-blue);
+            --neon-glow-strong: 0 0 5px var(--neon-blue),
+                              0 0 10px var(--neon-blue),
+                              0 0 20px var(--neon-blue),
+                              0 0 40px var(--neon-blue);
+        }
+
+
+
+        video {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            margin: 20px 0;
+            border-radius: 8px;
+            z-index: 1px;
+            border-color: var(--neon-blue);
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 255, 0.2),
+                0 0 20px rgba(0, 255, 255, 0.1),
+                var(--neon-glow);
+        }
+        
+        #preview {
+            max-width: 300px;
+            border: 3px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            
+            margin-top: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        canvas {
+            display: none;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 1.1em;
+            background: #504a4a;
+            
+            color: white;
+            border: white 1px solid;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color box-shadow 0.3s ease;
+        }
+        
+        button:hover {
+          border-color: var(--neon-blue);
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 255, 0.2),
+                0 0 20px rgba(0, 255, 255, 0.1),
+                var(--neon-glow);
+        }
+        
+        button:disabled {
+            background: #504a4a;
+            cursor: not-allowed;
+            color: #817f7f;
+        }
+    </style>
+
+
+</head>
+<body>
+
+  <div class="screen1" id="screen1">
+    <h1>Access Camera and Capture Photo</h1>
+    <br>
+    <br>
+    <video id="camera" autoplay></video>
+    <br>
+    <center>
+    <button id="capture-btn">Capture Photo</button>
+    </center>
+  </div>
+
+
+  <div class="screen2">
+    <div id="preview-container"></div>
+    <div id="button-container" style="display: none; gap: 20px; margin-top: 20px;">
+        <button id="confirm-all" style="border: #4CAF50 2px solid;">Confirm All</button>
+        <button id="retake" style="border: #f44336 2px solid;">Retake</button>
+    </div>
+  </div>
+
+
+  <div class="screen3-part1">
+    <div id="confirmation-view" style="display: none; margin-top: 20px;">
+        <h2>Confirmation View</h2>
+        <div id="final-images" style="display: flex; overflow-x: auto; scroll-behavior: smooth; gap: 10px; padding: 10px; -ms-overflow-style: none; scrollbar-width: none;"></div>
+    </div>
+    <canvas id="photo"></canvas>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="screen3-part2">
+    <div class="body-div" style="display: none;">
+        <div class="container disable">
+            <h2>Easy Image Editor</h2>
+            
+            <div class="wrapper">
+                <div class="editor-panel">
+                    <div class="filter">
+                        <label class="title">Filters</label>
+                        <div class="options">
+                            <button id="brightness" class="active">Brightness</button>
+                            <button id="saturation">Saturation</button>
+                            <button id="inversion">Inversion</button>
+                            <button id="grayscale">Grayscale</button>
+                        </div>
+                        <div class="slider">
+                            <div class="filter-info">
+                                <p class="name">Brighteness</p>
+                                <p class="value">100%</p>
+                            </div>
+                            <input type="range" value="100" min="0" max="200">
+                        </div>
+                    </div>
+                    <div class="rotate">
+                        <label class="title">Rotate & Flip</label>
+                        <div class="options">
+                          <!-- 
+                            <button id="left"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button id="right"><i class="fa-solid fa-rotate-right"></i></button>
+                          -->
+                            <center>
+                            <button id="horizontal"><i class='bx bx-reflect-vertical'></i></button>
+                            <button id="vertical"><i class='bx bx-reflect-horizontal' ></i></button>
+                            </center>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="controls">
+                <button class="reset-filter">Reset Filters</button>
+                <div class="row">
+                    <input type="file" class="file-input" accept="image/*" hidden>
+                    
+                    <button class="save-img">Save Image</button>
+                    <button class="save-img" id="next">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+  <div class="screen4" id="screen4" style="display: none;">
+
+
+
+    <div class="sticker-container">
+      <h3>Drag and Drop Stickers </h3>
+      <br><hr>
+
+      <img src="sticker1.png" class="sticker" draggable="true" crossorigin="anonymous">
+      <img src="sticker2.png" class="sticker" draggable="true" crossorigin="anonymous">
+      <img src="sticker3.png" class="sticker" draggable="true" crossorigin="anonymous">
+      <img src="sticker4.png" class="sticker" draggable="true" crossorigin="anonymous">
+      <img src="sticker5.png" class="sticker" draggable="true" crossorigin="anonymous">
+  </div>
+    
+  <br>
+  <hr>
+  <br>
+
+  <center>
+
+    <div id="collageContainer">
+      <div id="tableContainer"></div>
+      <div id="footerContainer" class="footer">
+        <canvas id="footerCanvas" height="100"></canvas>
+      </div>
+    </div>
+   
+  
+    <br>
+    <!-- Edit Controls -->
+    <div class="edit ">
+    
+      <h3>Edit Canvas</h3>
+      <hr>
+     
+      BG Color: <input type="color" id="bgColor" value="#ffffff"> <br><br>
+      Border Color: <input type="color" id="borderColor" value="#000000"><br><br>
+      Style:
+      <select id="borderStyle">
+        <option value="solid">Solid</option>
+        <option value="dotted">Dotted</option>
+        <option value="dashed">Dashed</option>
+        <option value="double">Double</option>
+      </select>  
+      <br><br>
+      Border Thickness: <input type="number" id="borderWidth" value="1"><br><br>
+
+      <center>
+      <button onclick="resetCanvas()">Reset</button>
+      </center>
+    
+    <!-- Footer Text -->
+    <br><hr>
+    <h3>Footer</h3>
+    <hr>
+    <input type="text" id="footerText" placeholder="Enter footer text">
+    <select id="fontSelect">
+        <option value="Arial">Arial</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Tahoma">Tahoma</option>
+      </select>  
+    <br><br>
+    <button onclick="updateFooterCanvas()">Update Footer</button>
+    
+    <button id="print-btn"> PRINT </button>
+    
+    
+    
+    
+    
+    
+    
+    </div>
+    
+
+  </center>  
+    
+  </div>
+
+
+
+
+  <script>
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('photo');
+        const captureBtn = document.getElementById('capture-btn');
+        
+        // Access camera with 16:9 aspect ratio
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 },  // 16:9 aspect ratio
+                frameRate: { ideal: 30 }
+            } 
+        })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error accessing camera:', err);
+                alert('Could not access camera!');
+            });
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const rows = parseInt(urlParams.get('rows')) || 1;
+        const cols = parseInt(urlParams.get('cols')) || 1;
+        const totalImages = rows * cols;
+
+        // Capture photo
+        captureBtn.addEventListener('click', async () => {
+            captureBtn.disabled = true;
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = '';
+            previewContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            
+            for(let i = 0; i < totalImages; i++) {
+                let count = 2; //timer
+                const updateTimer = () => {
+                    captureBtn.textContent = `Capturing image ${i+1}/${totalImages} in ${count}...`;
+                    count--;
+                };
+                
+                // Initial update
+                updateTimer();
+                
+                // Wait 1st second
+                await new Promise(r => setTimeout(r, 1000)); //1000 ms = 1 sec
+                updateTimer();
+                
+                // Wait 2nd second
+                await new Promise(r => setTimeout(r, 1000));
+                
+                // Capture image at full camera resolution
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;  // Uses actual camera resolution
+                canvas.height = video.videoHeight; // Uses actual camera resolution
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Create preview image while maintaining full resolution
+                const img = document.createElement('img');
+                img.onload = function() {
+                    // Keep original dimensions for data
+                    img.width = canvas.width;  // Full camera width
+                    img.height = canvas.height; // Full camera height
+                    // Only adjust display size
+                    img.style.maxWidth = '150px';
+                    img.style.height = 'auto';
+                };
+                img.src = canvas.toDataURL('image/png', 1.0); // Use maximum quality
+                img.classList.add('preview-image');
+                previewContainer.appendChild(img);
+            }
+            
+
+            // Show buttons after capture completes
+            document.getElementById('button-container').style.display = 'flex';
+            // Hide video and capture button
+            document.getElementById('camera').style.display = 'none';
+            document.getElementById('capture-btn').style.display = 'none';
+            // or hide entire screen1
+            document.getElementById('screen1').style.display = 'none';
+            captureBtn.textContent = 'Capture Photo';
+            captureBtn.disabled = false;
+        });
+
+        // Retake functionality
+        document.getElementById('retake').addEventListener('click', () => {
+            //hide buttons and images container
+            document.getElementById('preview-container').innerHTML = '';
+            document.getElementById('button-container').style.display = 'none';
+            // Show video and capture button again
+            document.getElementById('camera').style.display = 'block';
+            document.getElementById('capture-btn').style.display = 'inline-block';
+            //show screen1 div
+            document.getElementById('screen1').style.display = 'block';
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        let previewImg = null; //global variable
+
+        
+        // Confirm All placeholder
+        document.getElementById('confirm-all').addEventListener('click', () => {
+            const previewContainer = document.getElementById('preview-container');
+            const finalImages = document.getElementById('final-images');
+            
+            // Hide preview and buttons
+            previewContainer.style.display = 'none';
+            document.getElementById('button-container').style.display = 'none';
+            
+            // Show confirmation view
+            const confirmationView = document.getElementById('confirmation-view');
+            confirmationView.style.display = 'block';
+            
+
+
+            // ✅ Show the image editor
+            document.querySelector('.body-div').style.display = 'block';
+
+
+
+            // Clone images to final view
+            finalImages.innerHTML = '';
+            Array.from(previewContainer.children).forEach(originalImg => {
+                // Display final images while maintaining full resolution data
+                const img = originalImg.cloneNode(true);
+                img.style.height = '100px';
+                img.style.width = '150px';
+                // Store original dimensions as data attributes
+                img.dataset.originalWidth = originalImg.naturalWidth;
+                img.dataset.originalHeight = originalImg.naturalHeight;
+                img.tabIndex = 0;
+                finalImages.appendChild(img);
+            });
+
+
+
+
+// Attach click event to all final-images
+// Attach click event after appending images
+const allImages = finalImages.querySelectorAll('img');
+allImages.forEach(img => {
+    img.addEventListener('click', () => {
+        selectImage(img);
+    });
+});
+
+            
+
+
+
+            // This function is called when an image from #final-images is clicked
+            function selectImage(selectedImg) {
+                const allImages = document.querySelectorAll('#final-images img');
+
+                allImages.forEach(img => {
+                    if (img === selectedImg) {
+                    // Apply focus styles
+                    img.style.height = "130px";
+                    img.style.width = "180px";
+                    img.style.transform = "scale(1.1)";
+                    img.style.padding = "3px";
+                    img.style.outline = "none";
+
+                    // Store the selected image in previewImg
+                    previewImg = img;
+                   
+
+
+// Enable editing
+//resetFilterBtn.click();
+document.querySelector(".container").classList.remove("disable");
+
+                    } else {
+                    // Apply blur styles
+                    img.style.height = "100px";
+                    img.style.width = "150px";
+                    img.style.transform = "scale(1)";
+                    img.style.padding = "0";
+                    }
+                });
+            }
+
+            
+
+
+ 
+
+
+
+
+            alert('Images confirmed! Showing final view');
+        });
+
+
+    //image editor js
+
+    
+    const fileInput = document.querySelector(".file-input"),
+    filterOptions = document.querySelectorAll(".filter button"),
+    filterName = document.querySelector(".filter-info .name"),
+    filterValue = document.querySelector(".filter-info .value"),
+    filterSlider = document.querySelector(".slider input"),
+    rotateOptions = document.querySelectorAll(".rotate button"),
+    //previewImg = document.querySelector(".preview-img img"),
+    resetFilterBtn = document.querySelector(".reset-filter"),
+
+    saveImgBtn = document.querySelector(".save-img");
+
+    let brightness = "100", saturation = "100", inversion = "0", grayscale = "0";
+    let rotate = 0, flipHorizontal = 1, flipVertical = 1;
+
+
+    //let previewImg = null; //global variable
+    /*
+    const loadImage = (source) => {
+        
+        if(!source) return;
+
+        //previewImg.src = URL.createObjectURL(source);
+        previewImg.src = source;
+        previewImg.addEventListener("load", () => {
+            resetFilterBtn.click();
+            document.querySelector(".container").classList.remove("disable");
+        });
+    }
+        */
+
+    const applyFilter = () => {
+        if(previewImg === null) 
+        {
+          alert("Select an image first!");
+          return;
+        }
+        previewImg.style.transform = `rotate(${rotate}deg) scale(${flipHorizontal}, ${flipVertical})`;
+        previewImg.style.filter = `brightness(${brightness}%) saturate(${saturation}%) invert(${inversion}%) grayscale(${grayscale}%)`;
+    }
+
+    filterOptions.forEach(option => {
+        option.addEventListener("click", () => {
+            document.querySelector(".active").classList.remove("active");
+            option.classList.add("active");
+            filterName.innerText = option.innerText;
+
+            if(option.id === "brightness") {
+                filterSlider.max = "200";
+                filterSlider.value = brightness;
+                filterValue.innerText = `${brightness}%`;
+            } else if(option.id === "saturation") {
+                filterSlider.max = "200";
+                filterSlider.value = saturation;
+                filterValue.innerText = `${saturation}%`
+            } else if(option.id === "inversion") {
+                filterSlider.max = "100";
+                filterSlider.value = inversion;
+                filterValue.innerText = `${inversion}%`;
+            } else {
+                filterSlider.max = "100";
+                filterSlider.value = grayscale;
+                filterValue.innerText = `${grayscale}%`;
+            }
+        });
+    });
+
+    const updateFilter = () => {
+        filterValue.innerText = `${filterSlider.value}%`;
+        const selectedFilter = document.querySelector(".filter .active");
+
+        if(selectedFilter.id === "brightness") {
+            brightness = filterSlider.value;
+        } else if(selectedFilter.id === "saturation") {
+            saturation = filterSlider.value;
+        } else if(selectedFilter.id === "inversion") {
+            inversion = filterSlider.value;
+        } else {
+            grayscale = filterSlider.value;
+        }
+
+        applyFilter();
+    }
+
+    rotateOptions.forEach(option => {
+        option.addEventListener("click", () => {
+            if(option.id === "left") rotate -= 90;
+            if(option.id === "right") rotate += 90;
+            if(option.id === "horizontal") flipHorizontal = flipHorizontal === 1 ? -1 : 1;
+            if(option.id === "vertical") flipVertical = flipVertical === 1 ? -1 : 1;
+            applyFilter();
+        });
+    });
+
+    resetFilterBtn.addEventListener("click", () => {
+        brightness = "100";
+        saturation = "100";
+        inversion = "0";
+        grayscale = "0";
+        rotate = 0;
+        flipHorizontal = 1;
+        flipVertical = 1;
+        //filterSlider.value = 100;
+        //filterValue.innerText = `100%`;
+        //filterOptions[0].classList.add("active");
+        filterOptions[0].click(); // activate brightness
+        applyFilter();
+    });
+
+
+
+
+
+
+    
+    saveImgBtn.addEventListener("click", () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = previewImg.naturalWidth;
+        canvas.height = previewImg.naturalHeight;
+        ctx.filter = `brightness(${brightness}%) saturate(${saturation}%) invert(${inversion}%) grayscale(${grayscale}%)`;
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(rotate * Math.PI / 180);
+        ctx.scale(flipHorizontal, flipVertical);
+        ctx.drawImage(previewImg, -canvas.width / 2, -canvas.height / 2);
+        const dataUrl = canvas.toDataURL("image/png");
+
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = "image.png";
+        a.click();
+    });
+
+    filterSlider.addEventListener("input", updateFilter);
+
+
+
+  </script>
+
+
+
+<script>
+
+document.getElementById('next').addEventListener('click', function () {
+  // Step 1: Get all images from #final-images
+  //const imageElements = document.querySelectorAll('#final-images img');
+  //const finalImagesArray = Array.from(imageElements).map(img => img.src);
+
+  const finalImagesArray = getFinalImageSources(); // 🔁 Now uses edited images if available
+
+
+  // Step 2: Hide screen3-part2 and show screen4
+  document.querySelector('.screen3-part2').style.display = 'none';
+  document.querySelector('.screen3-part1').style.display = 'none';
+  document.getElementById('screen4').style.display = 'block';
+
+
+  //step 3: create canvas grid now- when screen4 is shown
+  createGrid();
+
+
+  // Step 4: Place images into the collage grid
+  const allCanvases = document.querySelectorAll('#tableContainer canvas');
+  finalImagesArray.forEach((src, index) => {
+    if (index < allCanvases.length) {
+      const canvas = allCanvases[index];
+      const ctx = canvas.getContext('2d');
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // Optional, prevents CORS issues
+      img.src = src;
+      
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear old content
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw new image
+        canvas._imageSrc = img.src; // ✅ Store image source on canvas
+      };
+    }
+  });
+});
+
+
+
+function getFinalImageSources() {
+  const imageElements = document.querySelectorAll('#final-images img');
+
+  // If user edited an image, update it in #final-images
+  if (previewImg) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = previewImg.naturalWidth;
+    canvas.height = previewImg.naturalHeight;
+
+    ctx.filter = `brightness(${brightness}%) saturate(${saturation}%) invert(${inversion}%) grayscale(${grayscale}%)`;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(rotate * Math.PI / 180);
+    ctx.scale(flipHorizontal, flipVertical);
+    ctx.drawImage(previewImg, -canvas.width / 2, -canvas.height / 2);
+
+    const dataUrl = canvas.toDataURL("image/png");
+
+    // Replace the source of the selected image
+    previewImg.src = dataUrl;
+  }
+
+  // Return all image sources
+  return Array.from(imageElements).map(img => img.src);
+}
+
+</script>
+
+
+
+
+
+<script>
+  //const urlParams = new URLSearchParams(window.location.search);
+  //const rows = parseInt(urlParams.get('rows')) || 1;
+  //const cols = parseInt(urlParams.get('cols')) || 1;
+  const tableContainer = document.getElementById('tableContainer');
+  const footerCanvas = document.getElementById('footerCanvas');
+  const ctxFooter = footerCanvas.getContext('2d');
+  
+  let canvasSize = 160; // Update to match collage cell width
+  footerCanvas.width = cols * canvasSize; // Width = number of columns × cell width
+  footerCanvas.height = 90; // Match collage cell height
+  
+  // Draw grid
+  function createGrid() {
+    tableContainer.innerHTML = '';
+    for (let i = 0; i < rows; i++) {
+      const rowDiv = document.createElement('div');
+      rowDiv.classList.add('row');
+      for (let j = 0; j < cols; j++) {
+        const canvas = document.createElement('canvas');
+
+        // Set canvas size for collage grid cells - maintaining 16:9 aspect ratio but smaller size
+        canvas.width = 160;  // Half of 320
+        canvas.height = 90;  // Half of 180 - maintaining 16:9 ratio
+        
+        canvas.id = `cell-${i}-${j}`;
+        rowDiv.appendChild(canvas);
+      }
+      tableContainer.appendChild(rowDiv);
+    }
+    updateCanvasProperties();
+    updateFooterCanvas();
+  }
+  //createGrid();
+  
+  // Update canvas styles
+  function updateCanvasProperties() {
+    // Update footer canvas width based on number of columns
+    footerCanvas.width = cols * canvasSize;
+    document.documentElement.style.setProperty('--cols', cols);
+    
+    const bgColor = document.getElementById('bgColor').value;
+    const borderColor = document.getElementById('borderColor').value;
+    const borderStyle = document.getElementById('borderStyle').value;
+    const borderWidth = parseInt(document.getElementById('borderWidth').value);
+    
+    document.querySelectorAll('canvas').forEach(canvas => {
+     
+      //canvas.style.backgroundColor = bgColor;
+      //canvas.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
+  
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+      // Background
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+      // Border
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = borderWidth;
+  
+      // Set border style
+      if (borderStyle === 'dotted') {
+      ctx.setLineDash([2, 3]);
+      } else if (borderStyle === 'dashed') {
+      ctx.setLineDash([6, 4]);
+      } else if (borderStyle === 'double') {
+      ctx.setLineDash([]); // fallback to solid
+      ctx.strokeRect(borderWidth / 2, borderWidth / 2, canvas.width - borderWidth, canvas.height - borderWidth);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(borderWidth + 1, borderWidth + 1, canvas.width - 2 * (borderWidth + 1), canvas.height - 2 * (borderWidth + 1));
+      return; // skip normal strokeRect
+      } else {
+      ctx.setLineDash([]);
+      }
+  
+      // Draw border
+      ctx.strokeRect(
+      borderWidth / 2,
+      borderWidth / 2,
+      canvas.width - borderWidth,
+      canvas.height - borderWidth
+      );
+  
+
+
+
+if (canvas.id !== "footerCanvas" && canvas._imageSrc) {
+  const image = new Image();
+  image.src = canvas._imageSrc;
+  image.onload = () => {
+    const padding = borderWidth;
+    ctx.drawImage(
+      image,
+      padding,
+      padding,
+      canvas.width - 2 * padding,
+      canvas.height - 2 * padding
+    );
+  };
+}
+
+/*
+      if (canvas._imageSrc) {
+        const image = new Image();
+        image.src = canvas._imageSrc;
+        image.onload = () => {
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        };
+      }
+*/
+
+  
+    });
+  
+  
+    updateFooterCanvas();
+  }
+
+
+  ['bgColor', 'borderColor', 'borderStyle', 'borderWidth']
+    .forEach(id => document.getElementById(id).addEventListener('input', updateCanvasProperties));
+  
+  // Reset
+  function resetCanvas() {
+   
+    document.getElementById('bgColor').value = "#ffffff";
+    document.getElementById('borderColor').value = "#000000";
+    document.getElementById('borderStyle').value = "solid";
+    document.getElementById('borderWidth').value = 1;
+    updateCanvasProperties();
+  }
+  
+  // Footer text
+  function updateFooterCanvas() {
+      const text = document.getElementById('footerText').value;
+      const font = document.getElementById('fontSelect').value;
+      const bgColor = document.getElementById('bgColor').value;
+      const borderColor = document.getElementById('borderColor').value;
+      const borderStyle = document.getElementById('borderStyle').value;
+      const borderWidth = parseInt(document.getElementById('borderWidth').value);
+  
+      ctxFooter.clearRect(0, 0, footerCanvas.width, footerCanvas.height);
+  
+      // Background
+      ctxFooter.fillStyle = bgColor;
+      ctxFooter.fillRect(0, 0, footerCanvas.width, footerCanvas.height);
+  
+      // Border
+      ctxFooter.strokeStyle = borderColor;
+      ctxFooter.lineWidth = borderWidth;
+      ctxFooter.setLineDash(borderStyle === 'dotted' ? [4, 3] : []);
+      ctxFooter.strokeRect(
+      borderWidth / 2,
+      borderWidth / 2,
+      footerCanvas.width - borderWidth,
+      footerCanvas.height - borderWidth
+      );
+  
+      // Text
+      ctxFooter.font = `20px ${font}`;
+      ctxFooter.fillStyle = 'black';
+      ctxFooter.textAlign = 'center';
+      ctxFooter.textBaseline = 'middle';
+      ctxFooter.fillText(text, footerCanvas.width / 2, footerCanvas.height / 2);
+  
+  }
+</script>
+
+
+
+
+
+<script>
+  const c = document.getElementById('collageContainer');
+  
+  // Handle drag start for original stickers
+  document.querySelectorAll('.sticker').forEach(sticker => {
+    sticker.addEventListener('dragstart', (e) => {
+      if (!sticker.classList.contains('sticker')) return;
+      e.dataTransfer.setData('text/plain', sticker.src);
+    });
+  });
+  
+  // Handle drop inside collageContainer
+  c.addEventListener('dragover', e => e.preventDefault());
+  
+  c.addEventListener('drop', e => {
+    e.preventDefault();
+    const imgSrc = e.dataTransfer.getData('text/plain');
+    const sticker = document.createElement('div');
+    sticker.classList.add('dropped-sticker');
+    sticker.style.left = (e.clientX - c.getBoundingClientRect().left - 50) + 'px';
+    sticker.style.top = (e.clientY - c.getBoundingClientRect().top - 50) + 'px';
+    sticker.style.width = '100px';
+    sticker.style.height = '100px';
+    sticker.style.backgroundImage = `url(${imgSrc})`;
+    sticker.style.backgroundSize = '100% 100%';
+    sticker.style.backgroundPosition = 'center';
+    sticker.style.position = 'absolute';
+    sticker.style.backgroundRepeat = 'no-repeat';
+    
+  
+    // Add 4 resize handles
+    ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+      const handle = document.createElement('div');
+      handle.classList.add('resize-handle', pos);
+      sticker.appendChild(handle);
+    });
+  
+   
+  // Add delete button 🔥
+  const deleteBtn = document.createElement('div');
+  deleteBtn.classList.add('delete-btn');
+  deleteBtn.innerHTML = '×';
+  sticker.appendChild(deleteBtn);
+
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Don't trigger drag/resize
+    sticker.remove();
+  });
+
+  c.appendChild(sticker);
+
+  makeStickerDraggableAndResizable(sticker);
+});
+  
+  // Main function to handle drag + resize
+  function makeStickerDraggableAndResizable(sticker) {
+    let isDragging = false;
+    let isResizing = false;
+    let currentHandle = null;
+    let startX, startY, startWidth, startHeight, startLeft, startTop, offsetX, offsetY;
+  
+    sticker.addEventListener('mousedown', (e) => {
+      if (e.target.classList.contains('resize-handle')) {
+        isResizing = true;
+        currentHandle = e.target.classList[1]; // tl, tr, bl, br
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = parseFloat(getComputedStyle(sticker).width);
+        startHeight = parseFloat(getComputedStyle(sticker).height);
+        startLeft = parseFloat(sticker.style.left);
+        startTop = parseFloat(sticker.style.top);
+      } else {
+        isDragging = true;
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+        document.querySelectorAll('.dropped-sticker').forEach(s => s.classList.remove('selected'));
+        sticker.classList.add('selected');
+      }
+      e.preventDefault();
+    });
+  
+
+
+
+
+    window.addEventListener('mousemove', (e) => {
+  const rect = c.getBoundingClientRect();
+
+  if (isDragging) {
+    let x = e.clientX - rect.left - offsetX;
+    let y = e.clientY - rect.top - offsetY;
+
+    x = Math.max(0, Math.min(x, c.clientWidth - sticker.offsetWidth));
+    y = Math.max(0, Math.min(y, c.clientHeight - sticker.offsetHeight));
+
+    sticker.style.left = x + 'px';
+    sticker.style.top = y + 'px';
+  }
+
+  if (isResizing) {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newLeft = startLeft;
+    let newTop = startTop;
+
+    if (currentHandle === 'br') {
+      newWidth = startWidth + dx;
+      newHeight = startHeight + dy;
+    } 
+    else if (currentHandle === 'bl') {
+      newWidth = startWidth - dx;
+      newHeight = startHeight + dy;
+      newLeft = startLeft + dx;
+    } 
+    else if (currentHandle === 'tr') {
+      newWidth = startWidth + dx;
+      newHeight = startHeight - dy;
+      newTop = startTop + dy;
+    } 
+    else if (currentHandle === 'tl') {
+      newWidth = startWidth - dx;
+      newHeight = startHeight - dy;
+      newLeft = startLeft + dx;
+      newTop = startTop + dy;
+    }
+
+    // 💥 Prevent crossing over when too small
+    if (newWidth < 30) {
+      newWidth = 30;
+      if (currentHandle === 'bl' || currentHandle === 'tl') {
+        newLeft = startLeft + (startWidth - 30);
+      }
+    }
+    if (newHeight < 30) {
+      newHeight = 30;
+      if (currentHandle === 'tl' || currentHandle === 'tr') {
+        newTop = startTop + (startHeight - 30);
+      }
+    }
+
+    // Prevent going outside container
+    newLeft = Math.max(0, Math.min(newLeft, c.clientWidth - newWidth));
+    newTop = Math.max(0, Math.min(newTop, c.clientHeight - newHeight));
+
+    // Apply corrected values
+    sticker.style.width = newWidth + 'px';
+    sticker.style.height = newHeight + 'px';
+    sticker.style.left = newLeft + 'px';
+    sticker.style.top = newTop + 'px';
+  }
+});
+
+
+
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      isResizing = false;
+    });
+  }
+  
+  // Small helper for distance (if you still need it anywhere)
+  function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  }
+
+  // Deselect stickers when clicking outside
+c.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('dropped-sticker') && !e.target.classList.contains('resize-handle')) {
+    document.querySelectorAll('.dropped-sticker').forEach(s => s.classList.remove('selected'));
+  }
+});
+
+
+  </script>
+
+
+
+
+
+
+
+
+
+<script>
+
+
+
+document.getElementById('print-btn').addEventListener('click', () => {
+    const collageContainer = document.getElementById('collageContainer');
+    html2canvas(collageContainer, { backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        const dataUrl = canvas.toDataURL('image/png');
+        localStorage.setItem('capturedCollage', dataUrl);
+        window.location.href = 'print.html';
+    }).catch(error => {
+        console.error("Error generating collage:", error);
+        alert("Something went wrong while generating collage!");
+    });
+});
+
+
+  </script>
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
+
+
+
+
+
+<style>
+        #preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            max-width: 1000px;
+            max-height: 1000px;
+            padding: 15px;
+           
+            
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        #preview-container img {
+            flex: 0 1 150px;
+            height: auto;
+            max-width: 100%;
+            object-fit: contain;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        #preview-container img:hover {
+            transform: scale(1.05);
+            z-index: 1;
+        }
+</style>
+
+
+
+<style>
+#final-images {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 10px;
+    padding: 10px;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+#final-images::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari */
+}
+
+#final-images img {
+    max-height: 150px;
+    max-width: 150px;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s, height 0.3s, width 0.3s, padding 0.3s;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 7px;
+    flex-shrink: 0;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+#final-images img:focus {
+    height: 190px;
+    width: 190px;
+    transform: scale(1.1);
+    padding: 3px;
+    outline: none;
+}
+</style>
+
+
+
+<style>
+    /* Import Google font - Poppins */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+
+
+    /*
+    .body-div{
+      display: flex;
+      padding: 10px;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #8c52ff;
+    }
+      */
+
+    .container{
+      width: 550px;
+      padding: 30px 35px 35px;
+      background: #504a4a;
+      border-radius: 10px;
+      z-index: 3px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      border-color: var(--neon-blue);
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 255, 0.2),
+                0 0 20px rgba(0, 255, 255, 0.1),
+                var(--neon-glow);
+    }
+    
+
+
+    .container.disable .editor-panel,
+    .container.disable .controls .reset-filter,
+    .container.disable .controls .save-img{
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .container h2{
+      margin-top: -8px;
+      font-size: 22px;
+      font-weight: 500;
+    }
+    .container .wrapper{
+      display: flex;
+      margin: 20px 0;
+      min-height: 335px;
+    }
+    .wrapper .editor-panel{
+      padding: 15px 20px;
+      width: 500px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .editor-panel .title{
+      display: block;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .editor-panel .options, .controls{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .editor-panel button{
+      outline: none;
+      height: 40px;
+      font-size: 14px;
+      color: #6C757D;
+      background: #fff;
+      border-radius: 3px;
+      margin-bottom: 8px;
+      border: 1px solid #aaa;
+    }
+    .editor-panel .filter button{
+      width: calc(100% / 2 - 4px);
+    }
+    .editor-panel button:hover{
+      background: #f5f5f5;
+    }
+    .filter button.active{
+      color: #fff;
+      border-color: #8c52ff;
+      background: #8c52ff;
+    }
+    .filter .slider{
+      margin-top: 12px;
+    }
+    .filter .slider .filter-info{
+      display: flex;
+      color: #464646;
+      font-size: 14px;
+      justify-content: space-between;
+    }
+    .filter .slider input{
+      width: 100%;
+      height: 5px;
+      accent-color: #8c52ff;
+    }
+    .editor-panel .rotate{
+      margin-top: 17px;
+    }
+    .editor-panel .rotate button{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: calc(100% / 4 - 3px);
+    }
+    .rotate .options button:nth-child(3),
+    .rotate .options button:nth-child(4){
+      font-size: 18px;
+    }
+    .rotate .options button:active{
+      color: #fff;
+      background: #8c52ff;
+      border-color: #8c52ff;
+    }
+    .wrapper .preview-img{
+      flex-grow: 1;
+      display: flex;
+      overflow: hidden;
+      margin-left: 20px;
+      border-radius: 5px;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-img img{
+      max-width: 490px;
+      max-height: 335px;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .controls button{
+      padding: 11px 20px;
+      font-size: 14px;
+      border-radius: 3px;
+      outline: none;
+      color: #fff;
+      cursor: pointer;
+      background: none;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+    .controls .reset-filter{
+      color: #ffffff;
+      border: 1px solid #6C757D;
+    }
+    .controls .reset-filter:hover{
+      color: #fff;
+      background: #6C757D;
+    }
+    .controls .choose-img{
+      background: #6C757D;
+      border: 1px solid #6C757D;
+    }
+    .controls .save-img{
+      margin-left: 5px;
+      background: #8c52ff;
+      border: 1px solid #8c52ff;
+    }
+
+    @media screen and (max-width: 760px) {
+      .container{
+        padding: 25px;
+      }
+      .container .wrapper{
+        flex-wrap: wrap-reverse;
+      }
+      .wrapper .editor-panel{
+        width: 100%;
+      }
+      .wrapper .preview-img{
+        width: 100%;
+        margin: 0 0 15px;
+      }
+    }
+
+    @media screen and (max-width: 500px) {
+      .controls button{
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      .controls .row{
+        width: 100%;
+      }
+      .controls .row .save-img{
+        margin-left: 0px;
+      }
+    }
+</style>
+
+
+
+<style>
+  .row { display: flex; margin: 0px 0; }
+ 
+#tableContainer canvas {
+    width: 160px !important;  /* Half of original display size - maintaining 16:9 ratio */
+    height: 90px !important;  /* Half of original display size - maintaining 16:9 ratio */
+    display: block;
+    background: white;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+#footerCanvas {
+    width: calc(160px * var(--cols)) !important;  /* Width based on number of columns */
+    height: 90px !important;  /* Match collage cell height */
+    display: block;
+    background: white;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+.footer { 
+    margin-top: 0px; 
+    width: 100%;
+    display: flex;
+    justify-content: left;
+}
+
+/* Add CSS variable for columns */
+:root {
+    --cols: 1; /* Default value */
+}
+
+
+.edit{
+  border-color: var(--neon-blue);
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 255, 0.2),
+                0 0 20px rgba(0, 255, 255, 0.1),
+                var(--neon-glow);
+  width: 100%;
+  max-width: fit-content;
+  justify-content: center;
+  padding: 20px;
+  margin: 10px;
+  border-radius: 8px;
+}
+
+
+hr{
+  border-color: var(--neon-blue);
+ 
+}
+
+
+</style>
+
+
+<script>
+// Update the CSS variable when cols changes
+document.documentElement.style.setProperty('--cols', cols);
+</script>
+
+
+<style>
+  .sticker-container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+  }
+  .sticker {
+      width: 100px;
+      height: 100px;
+      cursor: move;
+      border: 2px dashed #ccc;
+      padding: 5px;
+  }
+ 
+
+#collageContainer {
+  display: inline-block;
+  overflow: hidden;
+    position: relative; /* very important for positioning dropped stickers */
+}
+
+.dropped-sticker {
+    position: relative;
+    cursor: move;
+    z-index: 10;
+
+    background-size: 100% 100%;
+background-repeat: no-repeat;
+background-position: center;
+
+    background-position: center;
+    overflow: visible;       
+    min-width: 30px;       /* Minimum size */
+    min-height: 30px;
+}
+
+.dropped-sticker.selected {
+    outline: 2px dashed #4CAF50; /* Green border to show selected */
+}
+
+
+.resize-handle {
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    position: absolute;
+    z-index: 20;
+    cursor: nwse-resize;
+    display: none;
+}
+
+
+
+/* Show handles ONLY when sticker is selected */
+
+.dropped-sticker.selected .resize-handle,
+.dropped-sticker.selected .delete-btn {
+  display: block; /* 🔥 Show when selected */
+  opacity: 1;
+}
+
+  /* Position each handle */
+  .resize-handle.tl { top: -6px; left: -6px; cursor: nwse-resize; }
+  .resize-handle.tr { top: -6px; right: -6px; cursor: nesw-resize; }
+  .resize-handle.bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+  .resize-handle.br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+
+.delete-btn {
+  display: none;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: red;
+  color: white;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 30;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+
+</style>

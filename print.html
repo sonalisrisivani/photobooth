@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Collage</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: white;
+        }
+        #final-collage {
+            max-width: 100%;
+            max-height: 100vh;
+            display: block;
+            margin: auto;
+        }
+        @media print {
+          /* Remove default print margins */
+          @page {
+            margin: 0;
+          }
+          /* Hide everything except the final image */
+          body * {
+            visibility: hidden;
+          }
+          #final-collage {
+            visibility: visible;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            max-height: 100vh;
+            margin: 0; /* Remove extra margin */
+            display: block;
+          }
+        }
+    </style>
+</head>
+
+<body onload="showCapturedCollage()">
+    <img id="final-collage"/>
+
+    <script>
+        function showCapturedCollage() {
+            const dataUrl = localStorage.getItem('capturedCollage');
+            if (dataUrl) {
+                document.getElementById('final-collage').src = dataUrl;
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            } else {
+                alert("No collage found!");
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>
