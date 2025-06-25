@@ -130,8 +130,15 @@
         };
 
         const navigateToSelect = () => {
-            console.log('Navigating to select.html');
-            window.location.href = './select.html';
+            console.log('Button clicked - navigating to select.html');
+            // Try multiple navigation methods to ensure it works
+            try {
+                window.location.href = 'select.html';
+            } catch (error) {
+                console.error('Navigation error:', error);
+                // Fallback method
+                window.location.assign('select.html');
+            }
         };
 
         refreshParticles();
