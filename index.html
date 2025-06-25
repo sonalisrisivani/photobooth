@@ -64,7 +64,7 @@
 </head>
 <body>
     <div class="center-button">
-        <a href="select.html"><button>Hello !</button></a>
+        <button onclick="navigateToSelect()">Hello !</button>
     </div>
 
     <div id="tsparticles"></div>
@@ -127,6 +127,11 @@
             });
 
             updateInstances();
+        };
+
+        const navigateToSelect = () => {
+            console.log('Navigating to select.html');
+            window.location.href = './select.html';
         };
 
         refreshParticles();
