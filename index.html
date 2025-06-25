@@ -38,6 +38,10 @@
             z-index: 1;
         }
 
+        .center-button a {
+            text-decoration: none;
+        }
+
         .center-button button {
             padding: 15px 30px;
             font-size: 1.5em;
@@ -64,7 +68,7 @@
 </head>
 <body>
     <div class="center-button">
-        <button onclick="navigateToSelect()">Hello !</button>
+        <a href="select.html"><button>Hello !</button></a>
     </div>
 
     <div id="tsparticles"></div>
@@ -127,18 +131,6 @@
             });
 
             updateInstances();
-        };
-
-        const navigateToSelect = () => {
-            console.log('Button clicked - navigating to select.html');
-            // Try multiple navigation methods to ensure it works
-            try {
-                window.location.href = 'select.html';
-            } catch (error) {
-                console.error('Navigation error:', error);
-                // Fallback method
-                window.location.assign('select.html');
-            }
         };
 
         refreshParticles();
